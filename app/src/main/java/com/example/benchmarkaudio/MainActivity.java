@@ -12,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -31,7 +32,7 @@ import static com.example.benchmarkaudio.PlayButton.mPlayer;
 public class MainActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = "AudioRecordTest";
-
+    Intent intent;
     public static String mFileName = null;
 
     public  static MediaPlayer  mPlayer = null;
@@ -68,37 +69,30 @@ public class MainActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         // Record to the external cache directory for visibility
-        mFileName = getExternalCacheDir().getAbsolutePath();
+        mFileName = getDir("res",MODE_PRIVATE).getAbsolutePath();
         mFileName += "/audiorecordtest.3gp";
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
         setContentView(R.layout.activity_main);
-        inicializarListView();
-        setClickEventSoundButton();
+        try {
+            inicializarListView();
+            setClickEventSoundButton();
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
         createTabs();
 
     }
 
 
 
-    public void setClickEventSoundButton(){
-        Button btns[] = new Button[1];
-        int i = 1;
+    public void setClickEventSoundButton() throws NoSuchFieldException, IllegalAccessException {
 
-        for (Button btn :
-                btns) {
-            try {
-                btn = findViewById(R.id.class.getField("btn" + i).getInt(null));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (NoSuchFieldException e) {
-                e.printStackTrace();
-            }
-            final int id = getResources().getIdentifier("sound" + i, "raw", getPackageName());
-            /*ring = MediaPlayer.create(MainActivity.this, id);
-            final MediaPlayer finalRing = ring;
-            */
+        Button btn = findViewById(R.id.class.getField("btn1").getInt(null));
+            final int id = getResources().getIdentifier("sound" + messageIntentReceived(), "raw", getPackageName());
             final Button finalBtn = btn;
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -107,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
                         onRecord(mStartRecording);
                         onPlaying(mStartPlaying,id);
                         if (mStartRecording) {
-                            finalBtn.setText("Grabando...");
+                            finalBtn.setText("Detener");
                         } else {
                             finalBtn.setText("Comenzar prueba");
                         }
@@ -116,13 +110,8 @@ public class MainActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    //Uri uri=Uri.parse("android.resource://"+getPackageName()+"/raw/sound"+"1"+".mp3");
-                    /*finalRing.start();
-                    lastRing = finalRing;*/
                 }
             });
-            i++;
-        }
     }
     private void onPlaying(boolean start,int id) throws IOException {
         if (start) {
@@ -166,10 +155,10 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
-    public void inicializarListView(){
+    public void inicializarListView() throws NoSuchFieldException, IllegalAccessException {
         final ListView milista = (ListView)findViewById(R.id.milista);
         HashMap<String,String> hash = new HashMap<>();
-        hash.put("Sonido","Bark Sound");
+        hash.put("Sonido",getString(R.string.class.getField("radio"+messageIntentReceived()).getInt(null)));
         List<HashMap<String,String>> listItem = new ArrayList<>();
         SimpleAdapter adapter = new SimpleAdapter(this, listItem,R.layout.list_item, new String[]{"First Line", "Second Line"}, new int[]{R.id.text1,R.id.text2});
 
@@ -182,7 +171,18 @@ public class MainActivity extends AppCompatActivity {
             listItem.add(resultmap);
         }
         milista.setAdapter(adapter);
+        milista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                intent = new Intent(getBaseContext(),SelectAudio.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
     }
+
     @Override
     public void onStop() {
         super.onStop();
@@ -229,6 +229,10 @@ public class MainActivity extends AppCompatActivity {
         mRecorder = null;
     }
 
+    public Byte messageIntentReceived() {
+        intent = getIntent();
+        return intent.getByteExtra(SelectAudio.SELECTED_SOUND, (byte) 1);
+    }
 
 
         /*
