@@ -1,10 +1,14 @@
 package com.example.benchmarkaudio;
 
 import android.content.Intent;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.RadioButton;
+
+import static android.content.Intent.FLAG_ACTIVITY_NEW_TASK;
 
 public class SelectAudio extends AppCompatActivity {
     public static final String SELECTED_SOUND = "com.example.benchmark.MESSAGE";
@@ -23,6 +27,7 @@ public class SelectAudio extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public void onRadioButtonClicked(View view){
 
         Intent intent = new Intent(this, MainActivity.class);
@@ -57,6 +62,5 @@ public class SelectAudio extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         startActivity(intent);
-        finish();
     }
 }

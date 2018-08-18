@@ -2,14 +2,17 @@ package com.example.benchmarkaudio;
 
 import android.Manifest;
 import android.app.LauncherActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -18,6 +21,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TabHost;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
 
-    private MediaPlayer ring;
+    public static MediaPlayer ring;
     private MediaPlayer lastRing=null;
     boolean mStartPlaying = true;
 
@@ -64,6 +68,10 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -73,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
         mFileName += "/audiorecordtest.3gp";
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
-
         setContentView(R.layout.activity_main);
         try {
             inicializarListView();
@@ -94,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
         Button btn = findViewById(R.id.class.getField("btn1").getInt(null));
             final int id = getResources().getIdentifier("sound" + messageIntentReceived(), "raw", getPackageName());
             final Button finalBtn = btn;
+
+            final Context contextMain = this;
             btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -103,7 +112,11 @@ public class MainActivity extends AppCompatActivity {
                         if (mStartRecording) {
                             finalBtn.setText("Detener");
                         } else {
-                            finalBtn.setText("Comenzar prueba");
+                            intent = new Intent(contextMain,ResultsTest.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                            startActivity(intent);
+                            finalBtn.setText(getString(R.string.button1));
                         }
                         mStartRecording = !mStartRecording;
                         mStartPlaying = !mStartPlaying;
@@ -123,9 +136,27 @@ public class MainActivity extends AppCompatActivity {
     }
     private void startPlaying(int id){
         ring = MediaPlayer.create(MainActivity.this, id);
+        final Button finalBtn = findViewById(R.id.btn1);
+        ring.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                try {
+                    intent = new Intent(getBaseContext(),ResultsTest.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    stopPlaying();
+                    startActivity(intent);
+                    finalBtn.setText(getString(R.string.button1));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         ring.start();
     }
-    public void stopPlaying() throws IOException {
+
+
+    protected static void stopPlaying() throws IOException {
         if (ring != null) {
             ring.stop();
             try {
@@ -135,8 +166,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     public void createTabs(){
-        TabHost tabhost = (TabHost) findViewById(R.id.tabhost);
+        TabHost tabhost = findViewById(R.id.tabhost);
         tabhost.setup();
         TabHost.TabSpec  ts = tabhost.newTabSpec("tag1");
         ts.setContent(R.id.tab1);
@@ -147,21 +179,14 @@ public class MainActivity extends AppCompatActivity {
         ts.setContent(R.id.tab2);
         ts.setIndicator("Historial");
         tabhost.addTab(ts);
-
-       /* ts= tabhost.newTabSpec("tag3");
-        ts.setContent(R.id.tab3);
-        ts.setIndicator("Third Tab");
-        tabhost.addTab(ts);
-        */
     }
 
     public void inicializarListView() throws NoSuchFieldException, IllegalAccessException {
         final ListView milista = (ListView)findViewById(R.id.milista);
-        HashMap<String,String> hash = new HashMap<>();
+        final HashMap<String,String> hash = new HashMap<>();
         hash.put("Sonido",getString(R.string.class.getField("radio"+messageIntentReceived()).getInt(null)));
-        List<HashMap<String,String>> listItem = new ArrayList<>();
-        SimpleAdapter adapter = new SimpleAdapter(this, listItem,R.layout.list_item, new String[]{"First Line", "Second Line"}, new int[]{R.id.text1,R.id.text2});
-
+        final List<HashMap<String,String>> listItem = new ArrayList<>();
+        final SimpleAdapter adapter = new SimpleAdapter(this, listItem,R.layout.list_item, new String[]{"First Line", "Second Line"}, new int[]{R.id.text1,R.id.text2});
         Iterator it= hash.entrySet().iterator();
         while(it.hasNext()){
             HashMap<String,String> resultmap = new HashMap<>();
@@ -174,11 +199,21 @@ public class MainActivity extends AppCompatActivity {
         milista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+
                 intent = new Intent(getBaseContext(),SelectAudio.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                listItem.clear();
+                hash.clear();
                 startActivity(intent);
                 finish();
+
+                //Reset activity
+                /*finish();
+                overridePendingTransition( 0, 0);
+                startActivity(new Intent(getBaseContext(),MainActivity.class));
+                overridePendingTransition( 0, 0);*/
             }
         });
     }
@@ -192,10 +227,18 @@ public class MainActivity extends AppCompatActivity {
             mRecorder = null;
         }
 
-        if (mPlayer != null) {
-            mPlayer.release();
-            mPlayer = null;
+        if (ring != null) {
+            ring.release();
+            ring = null;
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        /*Toast toast = Toast.makeText(getBaseContext(), "Comenzando...", Toast.LENGTH_SHORT);
+        toast.show();
+        */
     }
 
     private void onRecord(boolean start) throws IOException {
@@ -207,7 +250,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startRecording() {
-
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -221,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
         }
         mRecorder.start();
     }
-
 
     private void stopRecording() {
         mRecorder.stop();
