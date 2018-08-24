@@ -10,4 +10,6 @@
     <string name="title_activity_main2">Main2Activity</string>
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
+    <string name="stop">Detener</string>
+    <string name="sound">Sonido</string>
 </resources>

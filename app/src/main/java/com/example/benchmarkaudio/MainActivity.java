@@ -1,7 +1,6 @@
 package com.example.benchmarkaudio;
 
 import android.Manifest;
-import android.app.LauncherActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,18 +8,16 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TabHost;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -39,8 +36,9 @@ public class MainActivity extends AppCompatActivity {
     Intent intent;
     public static String mFileName = null;
 
+    public int soundPlaying = -1;
     public  static MediaPlayer  mPlayer = null;
-
+    Toast toast;
     //Recording
     boolean mStartRecording = true;
     private RecordButton mRecordButton = null;
@@ -91,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         createTabs();
-
     }
 
 
@@ -110,13 +107,17 @@ public class MainActivity extends AppCompatActivity {
                         onRecord(mStartRecording);
                         onPlaying(mStartPlaying,id);
                         if (mStartRecording) {
-                            finalBtn.setText("Detener");
+                            finalBtn.setText(getString(R.string.stop));
+                            soundPlaying = id;
+                            findViewById(R.id.milista).setVisibility(View.INVISIBLE);
                         } else {
+                            soundPlaying = -1;
                             intent = new Intent(contextMain,ResultsTest.class);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivity(intent);
                             finalBtn.setText(getString(R.string.button1));
+                            findViewById(R.id.milista).setVisibility(View.VISIBLE);
                         }
                         mStartRecording = !mStartRecording;
                         mStartPlaying = !mStartPlaying;
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
     }
+
     private void onPlaying(boolean start,int id) throws IOException {
         if (start) {
             startPlaying(id);
@@ -134,22 +136,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    private void startPlaying(int id){
+    private void startPlaying(final int id){
         ring = MediaPlayer.create(MainActivity.this, id);
         final Button finalBtn = findViewById(R.id.btn1);
         ring.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
+                intent = new Intent(getBaseContext(),ResultsTest.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                 try {
-                    intent = new Intent(getBaseContext(),ResultsTest.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    stopPlaying();
-                    startActivity(intent);
-                    finalBtn.setText(getString(R.string.button1));
+                    onRecord(mStartRecording);
+                    onPlaying(mStartPlaying,id);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                mStartRecording = !mStartRecording;
+                mStartPlaying = !mStartPlaying;
+                startActivity(intent);
+                finalBtn.setText(getString(R.string.button1));
             }
         });
         ring.start();
@@ -184,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
     public void inicializarListView() throws NoSuchFieldException, IllegalAccessException {
         final ListView milista = (ListView)findViewById(R.id.milista);
         final HashMap<String,String> hash = new HashMap<>();
-        hash.put("Sonido",getString(R.string.class.getField("radio"+messageIntentReceived()).getInt(null)));
+        hash.put(getString(R.string.sound),getString(R.string.class.getField("radio"+messageIntentReceived()).getInt(null)));
         final List<HashMap<String,String>> listItem = new ArrayList<>();
         final SimpleAdapter adapter = new SimpleAdapter(this, listItem,R.layout.list_item, new String[]{"First Line", "Second Line"}, new int[]{R.id.text1,R.id.text2});
         Iterator it= hash.entrySet().iterator();
@@ -221,15 +226,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStop() {
         super.onStop();
-
-        if (mRecorder != null) {
-            mRecorder.release();
-            mRecorder = null;
-        }
-
-        if (ring != null) {
-            ring.release();
-            ring = null;
+        if(soundPlaying!=-1) {
+            stopRecording();
+            try {
+                stopPlaying();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            finish();
+            //startActivity(new Intent(getBaseContext(),MainActivity.class));
         }
     }
 
@@ -260,14 +265,17 @@ public class MainActivity extends AppCompatActivity {
             mRecorder.prepare();
         } catch (IOException e) {
             Log.e(LOG_TAG, "prepare() failed");
+
         }
         mRecorder.start();
     }
 
     private void stopRecording() {
+
         mRecorder.stop();
         mRecorder.release();
         mRecorder = null;
+
     }
 
     public Byte messageIntentReceived() {
