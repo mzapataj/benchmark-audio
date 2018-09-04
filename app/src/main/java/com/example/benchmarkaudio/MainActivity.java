@@ -17,8 +17,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TabHost;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,9 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.benchmarkaudio.PlayButton.mPlayer;
-//import static com.example.benchmarkaudio.RecordButton.mRecorder;
-
 public class MainActivity extends AppCompatActivity {
 
     public static final String LOG_TAG = "AudioRecordTest";
@@ -37,18 +32,17 @@ public class MainActivity extends AppCompatActivity {
     public static String mFileName = null;
 
     public int soundPlaying = -1;
-    public  static MediaPlayer  mPlayer = null;
-    Toast toast;
+
     //Recording
     boolean mStartRecording = true;
-    private RecordButton mRecordButton = null;
     public static  MediaRecorder mRecorder = null;
 
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
 
     public static MediaPlayer ring;
-    private MediaPlayer lastRing=null;
     boolean mStartPlaying = true;
+
+
 
     // Requesting permission to RECORD_AUDIO
     private boolean permissionToRecordAccepted = false;
@@ -265,7 +259,6 @@ public class MainActivity extends AppCompatActivity {
             mRecorder.prepare();
         } catch (IOException e) {
             Log.e(LOG_TAG, "prepare() failed");
-
         }
         mRecorder.start();
     }
