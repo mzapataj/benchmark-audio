@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
                         if (mStartRecording) {
                             finalBtn.setText(getString(R.string.stop));
                             soundPlaying = id;
-                            findViewById(R.id.milista).setVisibility(View.INVISIBLE);
+
                         } else {
                             soundPlaying = -1;
                             intent = new Intent(contextMain,ResultsTest.class);
@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
                             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                             startActivity(intent);
                             finalBtn.setText(getString(R.string.button1));
-                            findViewById(R.id.milista).setVisibility(View.VISIBLE);
                         }
                         mStartRecording = !mStartRecording;
                         mStartPlaying = !mStartPlaying;
@@ -131,7 +130,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
     private void startPlaying(final int id){
-        ring = MediaPlayer.create(MainActivity.this, id);
+        ring = MediaPlayer.create(MainActivity.this, R.raw.test);
+//        ring = MediaPlayer.create(MainActivity.this, id);
         final Button finalBtn = findViewById(R.id.btn1);
         ring.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -174,10 +174,11 @@ public class MainActivity extends AppCompatActivity {
         ts.setIndicator("Prueba");
         tabhost.addTab(ts);
 
-        ts = tabhost.newTabSpec("tag2");
+        /*ts = tabhost.newTabSpec("tag2");
         ts.setContent(R.id.tab2);
         ts.setIndicator("Historial");
         tabhost.addTab(ts);
+        */
     }
 
     public void inicializarListView() throws NoSuchFieldException, IllegalAccessException {
@@ -199,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-
+                /*
                 intent = new Intent(getBaseContext(),SelectAudio.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
                 hash.clear();
                 startActivity(intent);
                 finish();
-
+                */
                 //Reset activity
                 /*finish();
                 overridePendingTransition( 0, 0);
@@ -264,11 +265,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopRecording() {
-
-        mRecorder.stop();
-        mRecorder.release();
-        mRecorder = null;
-
+        if(mRecorder != null) {
+            mRecorder.stop();
+            mRecorder.release();
+            mRecorder = null;
+        }
     }
 
     public Byte messageIntentReceived() {

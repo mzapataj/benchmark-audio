@@ -3,7 +3,7 @@
     <string name="textView1">Tap to start the test</string>
     <string name="button1">Comenzar Prueba</string>
     <string name="button2">Reproducir</string>
-    <string name="radio1">Bark Sound</string>
+    <string name="radio1">Frequency Sweep (~8 Khz)</string>
     <string name="radio2">Motorcycle Sound</string>
     <string name="radio3">Train sound</string>
     <string name="label1">Resultados</string>
@@ -12,4 +12,6 @@
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="stop">Detener</string>
     <string name="sound">Sonido</string>
+    <string name="recording">Audio grabado</string>
+    <string name="original">Audio Original</string>
 </resources>

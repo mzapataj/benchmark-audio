@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.PersistableBundle;
 import android.support.annotation.RequiresApi;
@@ -20,9 +21,12 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,10 +42,14 @@ public class ResultsTest extends AppCompatActivity {
     private boolean isPlaying = false;
     private MediaExtractor mex = new MediaExtractor();
     String bitRate;
-    int sampleRate;
+    float infoRetrieve;
     private byte[] audioBytes;
     private Complex[] domainTime;
     private Complex[] domainFrequency;
+
+    private byte[] audioBytes2;
+    private Complex[] domainTime2;
+    private Complex[] domainFrequency2;
     LineGraphSeries<DataPoint> series;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -60,7 +68,8 @@ public class ResultsTest extends AppCompatActivity {
         }
         Button btn= findViewById(R.id.button2);
         btn.setText(getString(R.string.button2));
-        createChart(domainFrequency);
+        createChart(domainFrequency,R.id.grafica);
+        createChart(domainFrequency2,R.id.grafica2);
     }
 
     private void startPlayingRecorded() throws IOException {
@@ -87,14 +96,22 @@ public class ResultsTest extends AppCompatActivity {
     public void metaDataRetrieve() throws IOException, NoSuchFieldException, IllegalAccessException {
         mex.setDataSource(mFileName);
         MediaFormat mef = mex.getTrackFormat(0);
-        sampleRate = mef.getInteger(MediaFormat.KEY_SAMPLE_RATE);
         bitRate = MediaFormat.KEY_BIT_RATE;
         audioBytes = convert(mFileName);
+        infoRetrieve = audioBytes.length;
         audioBytes = setLength2Power(audioBytes);
         domainTime = Complex.byteToComplexArr(audioBytes);
         domainFrequency = FFT.fft(domainTime);
+
+        //Original audio
+        audioBytes2 = convert2(R.raw.test);
+        audioBytes2 = fixLengArr(audioBytes2,audioBytes.length);
+        domainTime2 = Complex.byteToComplexArr(audioBytes2);
+        domainFrequency2 = FFT.fft(domainTime2);
+
         inicializarListView2();
     }
+
     public byte[] setLength2Power(byte[] arr){
         int n = arr.length;
         n = (int) Math.pow(2,(int)(Math.log(n)/Math.log(2)));
@@ -102,15 +119,22 @@ public class ResultsTest extends AppCompatActivity {
         System.arraycopy(arr, 0, result, 0, n);
         return result;
     }
+    public byte[] fixLengArr(byte[] arr, int n){
+        byte[] result = new byte[n];
+        System.arraycopy(arr, 0, result, 0, n);
+        return result;
+    }
+
 
     public void inicializarListView2() throws NoSuchFieldException, IllegalAccessException {
         final ListView milista = (ListView)findViewById(R.id.milista2);
         final HashMap<String,String> hash = new HashMap<>();
         //hash.put("Tasa de bits:",bitRate+"bps");
 
-        hash.put("Tasa de muestreo:",sampleRate+"Hz");
-        hash.put("Numero de bytes:",audioBytes.length+" bytes");
+        DecimalFormat df = new DecimalFormat("#.00");
+        hash.put("Precisión:",df.format(((audioBytes.length+0.0)/infoRetrieve*100))+"%");
         hash.put("Frecuencia:",calculateFrequency(16000,audioBytes)+"Hz");
+        hash.put("Puntaje:",""+df.format(100000/mediumError(domainFrequency2,domainFrequency)));
 
         final List<HashMap<String,String>> listItem = new ArrayList<>();
         final SimpleAdapter adapter = new SimpleAdapter(this, listItem,R.layout.list_item2, new String[]{"First Line", "Second Line"}, new int[]{R.id.text21,R.id.text22});
@@ -125,16 +149,30 @@ public class ResultsTest extends AppCompatActivity {
         milista.setAdapter(adapter);
     }
 
-    public void createChart(Complex[] arr){
+    public double mediumError(Complex[] arr,Complex[] arr2){
+        double s,e;
+        s = 0;
+        int n = arr.length;
+        for (int i = 0; i<n; i++) {
+            e = Math.abs(arr2[i].abs()-arr[i].abs());
+            s = s + e;
+        }
+        return s/n;
+    }
+    public void createChart(Complex[] arr,int grafica){
         double y,x;
         x = 0;
-        double delta = (8000.0)/arr.length;
-        GraphView graph = (GraphView) findViewById(R.id.grafica);
+        double delta = (7333.4*arr.length/10762)/arr.length;
+        GraphView graph = (GraphView) findViewById(grafica);
         series = new LineGraphSeries<DataPoint>();
         GridLabelRenderer gridLabel = graph.getGridLabelRenderer();
         gridLabel.setHorizontalAxisTitle("Hz");
-        gridLabel.setVerticalAxisTitle("dB");
         series.setThickness(1);
+
+        graph.getViewport().setScrollable(true); // enables horizontal scrolling
+        graph.getViewport().setScrollableY(true); // enables vertical scrolling
+        graph.getViewport().setScalable(true); // enables horizontal zooming and scrolling
+        graph.getViewport().setScalableY(true);
 
         int n = arr.length;
         for (int i = 0; i<n; i++) {
@@ -158,8 +196,21 @@ public class ResultsTest extends AppCompatActivity {
         }
     }
 
-    public byte[] convert(String path) throws IOException {
+    public byte[] convert2(int id) throws IOException {
+        InputStream is=this.getResources().openRawResource(id);
+        BufferedInputStream bis = new BufferedInputStream(is);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] b = new byte[1024];
 
+        for (int readNum; (readNum = bis.read(b)) != -1;) {
+            bos.write(b, 0, readNum);
+        }
+
+        byte[] bytes = bos.toByteArray();
+
+        return bytes;
+    }
+    public byte[] convert(String path) throws IOException {
         FileInputStream fis = new FileInputStream(path);
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] b = new byte[1024];

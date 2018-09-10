@@ -55,7 +55,7 @@
                         android:layout_gravity="center"
                         android:background="@color/colorPrimary"
                         android:text="@string/button1"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="32dp"
                         android:padding="8dp"
                         android:textColor="@android:color/background_light"
                         app:layout_constraintBottom_toBottomOf="parent"
