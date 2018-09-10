@@ -146,6 +146,7 @@ public class ResultsTest extends AppCompatActivity {
             resultmap.put("Second Line", pair.getValue().toString());
             listItem.add(resultmap);
         }
+
         milista.setAdapter(adapter);
     }
 
@@ -180,6 +181,11 @@ public class ResultsTest extends AppCompatActivity {
             series.appendData(new DataPoint(x, y), true, n);
             x = x + delta;
         }
+
+        graph.getViewport().setXAxisBoundsManual(true);
+        graph.getViewport().setMinX(0);
+        graph.getViewport().setMaxX(x-delta);
+
         graph.addSeries(series);
     }
 
